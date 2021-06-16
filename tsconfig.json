@@ -6,5 +6,12 @@
 */
 {
   "files": [],
-  "references": []
+  "references": [
+    {
+      "path": "./projects/sd-masonry/tsconfig.lib.json"
+    },
+    {
+      "path": "./projects/sd-masonry/tsconfig.spec.json"
+    }
+]
 }
