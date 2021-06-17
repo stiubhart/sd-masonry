@@ -3,7 +3,11 @@
   
 This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.14.  
   
-### Angular Component for organising child components in a masonry layout using item dimensions 
+##### Angular Component for organising child components in a masonry layout
+
+The masonry grid is hastily calculated using `sdMasonryWidth` and `sdMasonryHeight` on each item on an array that you provide. Much faster than working this out on the fly after render that you see on other masonry layout packages. From there, you may add as much or as little data you want to each item which will be passed to one of your own component to do with what you will.
+ 
+Did I mention sd-masonry also flawlessly handles pagination. Simply add more items to your `data` object
 
 ## Install  
   
@@ -29,10 +33,14 @@ import { SdMasonryModule } from 'sd-masonry';
 >`<sd-masonry [component]="component" [data]="data" maxGridGap="0" maxTotalColCount="15"></sd-masonry>`
 
 `maxGrigGap` and `maxTotalColCount` will automatically reduce in size depending on the container size
-  
-## Getting Started  
 
-`ng new my-sd-masonry`
+#### Component Class
+Your component will be passed each item in your `data` array above in the form of an `item` object. Your component will need to be ready to grab it - `@Input() item`
+>  @Input() item: {sdMasonryWidth: number, sdMasonryHeight: number, ... };  
+  
+## Getting Started - A Walk-through
+
+Start a new project `ng new my-sd-masonry`
 
 replace `app.component.ts` with the following
 ```
@@ -40,14 +48,15 @@ import { Component, Input } from '@angular/core';
 
 @Component({  
     selector: 'app-root',  
-  template: `<div style="margin: 40px 100px;"><sd-masonry [component]="component" [data]="data"></sd-masonry></div>`,  
+    template: `<div style="margin: 40px 100px;"><sd-masonry [component]="component" [data]="data"></sd-masonry></div>`,  
 })  
 export class AppComponent {  
   
     /** Required by sd-masonry */  
     public component = ItemComponent; /** ItemComponent declared below */  
   
-    /** Required by sd-masonry (id and url properties are only required by ItemComponent in this example) */  public data: {sdMasonryWidth: number, sdMasonryHeight: number, id?: number, url?: string}[];  
+    /** Required by sd-masonry (id and url properties are only required by ItemComponent in this example) */
+    public data: {sdMasonryWidth: number, sdMasonryHeight: number, id?: number, url?: string}[];  
   
     private page1 = [  
         { sdMasonryWidth: 1000, sdMasonryHeight: 1500, id: 1, url: 'https://via.placeholder.com/1000x1500/947/000/?text=1+-+1000x1500' },  
@@ -137,7 +146,7 @@ export class AppComponent {
     styles: ['img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px;}'],  
 })  
 export class ItemComponent {  
-    @Input() item: {adMasonryWidth: number, sdMasonryHeight: number, id?: number, url?: string};  
+    @Input() item: {sdMasonryWidth: number, sdMasonryHeight: number, id?: number, url?: string};
 }
 ``` 
 
@@ -165,7 +174,7 @@ export class AppModule { }
 ```
 
 ## Output
-![Masonry Output Screen-shot](./masonry-shot.png)
+![Masonry Output Screen-shot](https://raw.githubusercontent.com/stiubhart/sd-masonry/master/masonry-shot.png)
 
 ## Troubleshooting
 If you're getting `Ivy` errors, you may need to update `tsconfig.json` or `tsconfig.app.json` with
