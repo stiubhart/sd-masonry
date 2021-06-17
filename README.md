@@ -164,6 +164,9 @@ import { SdMasonryModule } from 'sd-masonry';
 export class AppModule { }
 ```
 
+## Output
+![Masonry Output Screen-shot](./masonry-shot.png)
+
 ## Troubleshooting
 If you're getting `Ivy` errors, you may need to update `tsconfig.json` or `tsconfig.app.json` with
 ```
