@@ -1,6 +1,25 @@
 {
   "name": "sd-masonry",
-  "version": "0.0.17",
+  "version": "0.0.18",
+  "description": "Angular Component for organising child components in a masonry layout",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/stiubhart/sd-masonry.git"
+  },
+  "keywords": [
+    "Angular",
+    "Angular10",
+    "Masonry",
+    "Masonry Layout",
+    "Pagination",
+    "Grid"
+  ],
+  "author": "Stiubhart Dans<Stiubhart@btinternet.com> (https://github.com/stiubhart/)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/stiubhart/sd-masonry/issues"
+  },
+  "homepage": "https://github.com/stiubhart/sd-masonry#readme",
   "peerDependencies": {
     "@angular/common": "^10.0.14",
     "@angular/core": "^10.0.14"
