@@ -207,7 +207,7 @@ export class ItemComponent implements OnInit{
 }
 ```
 Remember to update `app.module.ts` to import the `BrowserAnimationsModule`
-```typescript
+```json
 imports: [
     BrowserModule,
     SdMasonryModule,
@@ -264,7 +264,7 @@ If you chose to include an `id` property, you'll also be able individually updat
 
 ## Troubleshooting
 If you're getting `Ivy` errors, you may need to update `tsconfig.json` or `tsconfig.app.json` with
-```typescript
+```json
   "angularCompilerOptions": {
     "enableIvy": false
   }
