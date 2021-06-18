@@ -16,7 +16,7 @@ Did I mention sd-masonry also flawlessly handles pagination. Simply add more ite
 ## Usage
 
 Import `SdMasonryModule` into your app's modules:
-```
+```typescript
 import { SdMasonryModule } from 'sd-masonry';
 
 @NgModule({
@@ -43,7 +43,7 @@ Your component will be passed each item in your `data` array above in the form o
 Start a new project `ng new my-sd-masonry`
 
 replace `app.component.ts` with the following
-```
+```typescript
 import { Component, Input } from '@angular/core';  
 
 @Component({  
@@ -151,7 +151,7 @@ export class ItemComponent {
 ``` 
 
 Update `app.module.ts` to include `SdMasonryModule` and `ItemComponent`
-```$xslt
+```typescript
 import { BrowserModule } from '@angular/platform-browser';
 import { NgModule } from '@angular/core';
 import { AppComponent, ItemComponent } from './app.component';
@@ -179,7 +179,7 @@ export class AppModule { }
 ## Animation Example
 
 Why not try adding in your own animation to the mix?  Just edit your `ItemComponent` like so :
-```
+```typescript
 import {animate, state, style, transition, trigger} from '@angular/animations';
 
 // ...
@@ -207,7 +207,7 @@ export class ItemComponent implements OnInit{
 }
 ```
 Remember to update `app.module.ts` to import the `BrowserAnimationsModule`
-```
+```typescript
 imports: [
     BrowserModule,
     SdMasonryModule,
@@ -218,7 +218,7 @@ imports: [
 ## Upping the game
 
 If you chose to include an `id` property, you'll also be able individually update an item's property, add a new item into the middle of the stack, and delete an item. Try updating your `app.component.ts` to the following  
-```
+```typescript
     private newItem = { sdMasonryWidth: 1368, sdMasonryHeight: 2739, id: 61, url: 'https://via.placeholder.com/966x1296/000/fff/?text=NEW+ITEM' };
 
     /**
@@ -264,7 +264,7 @@ If you chose to include an `id` property, you'll also be able individually updat
 
 ## Troubleshooting
 If you're getting `Ivy` errors, you may need to update `tsconfig.json` or `tsconfig.app.json` with
-```
+```typescript
   "angularCompilerOptions": {
     "enableIvy": false
   }
