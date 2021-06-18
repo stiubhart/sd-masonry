@@ -16,7 +16,7 @@ Did I mention sd-masonry also flawlessly handles pagination. Simply add more ite
 ## Usage
 
 Import `SdMasonryModule` into your app's modules:
-```typescript
+``` typescript
 import { SdMasonryModule } from 'sd-masonry';
 
 @NgModule({
@@ -43,7 +43,7 @@ Your component will be passed each item in your `data` array above in the form o
 Start a new project `ng new my-sd-masonry`
 
 replace `app.component.ts` with the following
-```typescript
+``` typescript
 import { Component, Input } from '@angular/core';  
 
 @Component({  
