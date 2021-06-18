@@ -125,8 +125,8 @@ export class AppComponent {
     ];  
   
     /**  
-    * Populate this.data 
-    */  
+     * Populate this.data 
+     */  
     constructor() {  
         this.data = this.page1; /** Loading in Page 1 */  
   
@@ -138,11 +138,11 @@ export class AppComponent {
   
   
 /**  
-* Your own child component for each sd-masonry cell 
-*/
+ * Your own child component for each sd-masonry cell 
+ */
 @Component({  
     selector: 'app-item-image',  
-    template: `<img [src]="item.url" [alt]="item.masonryStyle">`,  
+    template: `<img [src]="item.url" [alt]="item.id">`,  
     styles: ['img { width: 100%; height: 100%; object-fit: cover; border-radius: 5px;}'],  
 })  
 export class ItemComponent {  
@@ -175,6 +175,92 @@ export class AppModule { }
 
 ## Output
 ![Masonry Output Screen-shot](https://raw.githubusercontent.com/stiubhart/sd-masonry/master/masonry-shot.png)
+
+## Animation Example
+
+Why not try adding in your own animation to the mix?  Just edit your `ItemComponent` like so :
+```
+import {animate, state, style, transition, trigger} from '@angular/animations';
+
+// ...
+
+@Component({
+    selector: 'app-item-image',
+    template: `<img [@scaleAnimation]="state" [src]="item.url" [alt]="item.masonryStyle">`,
+    styles: ['img { width: 100%; height: 100%; object-fit: cover;}'],
+    animations: [trigger('scaleAnimation', [
+        state('beginning', style({transform: 'scale(0)', opacity: 0})),
+            state('end', style({transform: 'scale(1)', opacity: 1})),
+            transition('beginning => end', [animate('300ms')]),
+        ])]
+})
+export class ItemComponent implements OnInit{
+
+    @Input() item: {adMasonryWidth: number, sdMasonryHeight: number, id?: number, url?: string};
+    public state = 'beginning';
+
+    ngOnInit(): void {
+        setTimeout(() => {
+            this.state = 'end';
+        }, Math.random() * 600);
+    }
+}
+```
+Remember to update `app.module.ts` to import the `BrowserAnimationsModule`
+```
+imports: [
+    BrowserModule,
+    SdMasonryModule,
+    BrowserAnimationsModule
+],
+```
+
+## Upping the game
+
+If you chose to include an `id` property, you'll also be able individually update an item's property, add a new item into the middle of the stack, and delete an item. Try updating your `app.component.ts` to the following  
+```
+    private newItem = { sdMasonryWidth: 1368, sdMasonryHeight: 2739, id: 61, url: 'https://via.placeholder.com/966x1296/000/fff/?text=NEW+ITEM' };
+
+    /**
+     * Populate this.data
+     */
+    constructor() {
+
+        const delay = 2000;
+        let i = 2;
+
+        /** Loading in Page 1 */
+        this.data = this.page1;
+
+        /** Change an item's properties (and dimensions) - changing background to red */
+        setTimeout(() => {
+            this.data = this.data.map(item => {
+                if (item.id === 23) {
+                    item.url = 'https://via.placeholder.com/146x430/f00/000/?text=23+-+146x430';
+                    item.sdMasonryWidth = 146;
+                    item.sdMasonryHeight = 430;
+                }
+                return item;
+            });
+        }, delay * i++);
+
+        /** Add a new item randomly into the stack */
+        setTimeout(() => {
+            this.data.splice(12, 0, this.newItem);
+            this.data = [].concat(this.data); /** sd-masonry uses ngOnChange(), so mutated data won't trigger that lifecycle event 😔 */
+        }, delay * i++);
+
+        /** Loading in Page 2 */
+        setTimeout(() => {
+            this.data = this.data.concat(this.page2);
+        }, delay * i++);
+
+        /** Now... Let's remove the item we just added */
+        setTimeout(() => {
+            this.data = this.data.filter((item, index) => index !== 12);
+        }, delay * i++);
+    }
+```
 
 ## Troubleshooting
 If you're getting `Ivy` errors, you may need to update `tsconfig.json` or `tsconfig.app.json` with

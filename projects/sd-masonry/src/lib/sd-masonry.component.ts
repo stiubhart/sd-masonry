@@ -12,22 +12,22 @@ import {
     ViewChild,
     ViewContainerRef
 } from '@angular/core';
-import {Property} from 'estree';
 
 @Component({
   selector: 'sd-masonry',
   template: `
-        <div class="masonry-container" #masonryContainer [style]="'margin: ' + gridGap + 'px auto'">
-            <div class="grid-wrapper" [style]="parentStyle">
+      <div class="masonry-container" #masonryContainer [style]="'margin: ' + gridGap + 'px auto'">
+          <div class="grid-wrapper" [style]="parentStyle">
                 <ng-container #masonryContent></ng-container>
-            </div>
-        </div>
-    `,
+          </div>
+      </div>
+  `,
 })
 export class SdMasonryComponent implements OnInit, OnChanges {
 
-  @Input() data: {sdMasonryWidth: number, sdMasonryHeight: number}[];
-  public masonryData: {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId?: number}[];
+  /** data must have sdMasonryWidth and sdMasonryHeight properties at the root of each array element */
+  @Input() data: {sdMasonryWidth: number, sdMasonryHeight: number, id?: number|string}[];
+  public sdMasonryData: {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId?: number}[];
   @Input() component: Type<any>;
   @Input() maxTotalColCount = 10;
   @Input() maxGridGap = 10;
@@ -42,6 +42,8 @@ export class SdMasonryComponent implements OnInit, OnChanges {
   private sdMasonryStylesRendered: any[] = [];
   private areas = [];
   private medianArea: number;
+  private newOrRemovedItem = false;
+  private newPage = false;
 
   constructor(
       private resolver: ComponentFactoryResolver,
@@ -53,46 +55,131 @@ export class SdMasonryComponent implements OnInit, OnChanges {
   ngOnInit(): void {
     this.checkRequiredFields();
 
-    this.masonryData = JSON.parse(JSON.stringify(this.data)); /** Because we want to mutate this.data with our own properties */
+    this.sdMasonryData = JSON.parse(JSON.stringify(this.data)); /** Because we want to mutate this.data with our own properties */
 
     setTimeout(() => {
-      this.addMasonryIdToItems();
+      this.addSdMasonryIdToItems();
       this.getGridWrapperStyle();
-      this.buildMasonryStyles();
+      this.buildSdMasonryStyles();
       this.buildComponentItems();
     }, 0);
   }
 
   /**
-   * When this.data has changed when there's a new page
+   * When this.data has changed
+   * i.e when a new page or item has been added/deleted or an item's property has changed
    */
   ngOnChanges(changes: SimpleChanges): void {
-    this.masonryData = {...this.data, ...this.masonryData};
-    this.masonryData  = Object.values(this.masonryData);
+    this.newPage = false;
+    this.newOrRemovedItem = false;
 
-    const lastUsableRowForPage = (Object.keys(this.cells).length - 2);
-    this.lastUsableRowForPage = (lastUsableRowForPage > 1) ? lastUsableRowForPage : 1;
+    if (this.sdMasonryData) {
+      const tempSdMasonryData = this.remapSdMasonryData();
+      const anyRemoved = this.handleAnyRemovedItems();
+      this.newOrRemovedItem = (this.newOrRemovedItem) ? this.newOrRemovedItem : anyRemoved;
 
-    this.addMasonryIdToItems();
-    this.buildMasonryStyles();
+      this.sdMasonryData = tempSdMasonryData;
+    } else {
+      this.sdMasonryData = [];
+    }
+
+    this.addSdMasonryIdToItems();
+
+    if (this.newPage) {
+      const lastUsableRowForPage = (Object.keys(this.cells).length - 2);
+      this.lastUsableRowForPage = (lastUsableRowForPage > 1) ? lastUsableRowForPage : 1;
+    }
+
+    if (this.newOrRemovedItem) {
+      this.lastUsableRowForPage = 1;
+      this.cells = {};
+    }
+
+    this.buildSdMasonryStyles(this.newOrRemovedItem);
     this.buildComponentItems();
   }
 
-  addMasonryIdToItems(): void {
-    this.masonryData.forEach((item) => {
-      if (! item.hasOwnProperty('sdMasonryId')) {
-        if (! item.hasOwnProperty('sdMasonryHeight')) {
-          throw new TypeError(`item missing property sdMasonryHeight`);
+  /**
+   * Re-map sdMasonryData with the new this.data but grab the old sdMasonryStyle
+   * if it exists using item's id or index if id doesn't exist
+   */
+  remapSdMasonryData(): {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId?: number}[] {
+    const len = this.sdMasonryData.length;
+
+    return this.data.map((item, index: number) => {
+      const masonryItem = (this.sdMasonryData[0].hasOwnProperty('id')) ?
+          this.sdMasonryData.find((sdMasonryDataItem) => sdMasonryDataItem.sdMasonryId === item.id) :
+          this.sdMasonryData[index];
+
+      if (masonryItem) {
+        /**
+         * masonryItem exists, copy the old sdMasonryId and sdMasonryStyle and pop it into the new item
+         */
+        if ((item as any).sdMasonryWidth === masonryItem.sdMasonryWidth && (item as any).sdMasonryHeight === masonryItem.sdMasonryHeight) {
+          (item as any).sdMasonryStyle = masonryItem.sdMasonryStyle;
+        } else {
+          this.newOrRemovedItem = true;
         }
 
-        item.sdMasonryId = Math.round(Math.random() * 100000000);
+        (item as any).sdMasonryId = masonryItem.sdMasonryId;
+      } else {
+        /**
+         * masonryItem doesn't exist. This means a new one has been added (re-calculate all styles)
+         * or appended (newPage i.e don't re-calculate previous styles)
+         */
+        if (index + 1 < len) {
+          this.newOrRemovedItem = true;
+        } else {
+          this.newPage = true;
+        }
+      }
+
+      return item;
+    });
+  }
+
+  /**
+   * Check for removed items. Destroy the component and remove its reference.
+   * Returns boolean (true if any items have been removed
+   */
+  handleAnyRemovedItems(): boolean {
+    this.addSdMasonryIdToItems();
+
+    let newOrRemovedItem = false;
+    this.sdMasonryData.map((item, index) => {
+      const dataItemRemoved = (this.data[0].hasOwnProperty('id')) ?
+          this.data.find((dataItem) => dataItem.id === item.sdMasonryId) :
+          this.data[index];
+
+      if (! dataItemRemoved) {
+        this.sdMasonryStylesRendered[item.sdMasonryId]?.destroy();
+        setTimeout(() => {
+          this.sdMasonryStylesRendered.splice(item.sdMasonryId);
+        }, 0);
+        newOrRemovedItem = true;
+      }
+    });
+
+    return newOrRemovedItem;
+  }
+
+  /**
+   * loop through each masonry data item and add an id to it. If id exists, use that
+   * (works better when adding and removing individual items) otherwise create a random id
+   */
+  addSdMasonryIdToItems(): void {
+    this.sdMasonryData.forEach((item) => {
+      if (! item.hasOwnProperty('sdMasonryId')) {
+        item.sdMasonryId =  (item.hasOwnProperty('id')) ?
+            item.sdMasonryId = (item as any).id :
+            Math.round(Math.random() * 100000000);
       }
     });
   }
 
   /**
    * From the users this.component input where they pass in a component class, create an instance of it
-   * in the this.masonryContent for each masonryData item. Also add the sdMasonryStyle attribute to the
+   * in the this.masonryContent for each sdMasonryData item. Also add the sdMasonryStyle attribute to the
    * host view.
    */
   buildComponentItems(): void {
@@ -100,12 +187,20 @@ export class SdMasonryComponent implements OnInit, OnChanges {
       return;
     }
 
-    this.masonryData.forEach((item: {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId: number}) => {
+    this.sdMasonryData.forEach((item: {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId: number}) => {
+      const forwardItem = JSON.parse(JSON.stringify(item));
+      delete forwardItem.sdMasonryId;
+      delete forwardItem.sdMasonryStyle;
+
       /** We already have this item in the Rendered stack - maybe update it? */
       if (this.sdMasonryStylesRendered[item.sdMasonryId]) {
+        /** Update item */
+        const instanceRef = (this.sdMasonryStylesRendered[item.sdMasonryId].instance as {item: any});
+        instanceRef.item = forwardItem;
+
+        /** Update the componentRef with the new style */
         const viewRef = (this.sdMasonryStylesRendered[item.sdMasonryId].hostView as EmbeddedViewRef<any>);
         const oldStyle: string = (viewRef.rootNodes[0] as HTMLElement).getAttribute('style');
-        /** Update the componentRef with the new style */
         if (item.sdMasonryStyle !== oldStyle) {
           (viewRef.rootNodes[0] as HTMLElement).setAttribute('style', item.sdMasonryStyle);
         }
@@ -116,10 +211,6 @@ export class SdMasonryComponent implements OnInit, OnChanges {
       /** Build and add in this.masonryContent */
       const factory = this.resolver.resolveComponentFactory(this.component);
       const componentRef = this.masonryContent.createComponent(factory);
-
-      const forwardItem = JSON.parse(JSON.stringify(item));
-      delete forwardItem.sdMasonryId;
-      delete forwardItem.sdMasonryStyle;
 
       (componentRef.instance as {item: any}).item = forwardItem;
       /** Add Style to hostView */
@@ -145,7 +236,7 @@ export class SdMasonryComponent implements OnInit, OnChanges {
       throw new TypeError(`'maxTotalColCount' must be 3 or more`);
     }
 
-    this.masonryData.forEach((item) => {
+    this.sdMasonryData.forEach((item) => {
       const idString = (item.hasOwnProperty('id')) ? ` with id '${(item as any).id}' is ` : ' ';
       if (! item.hasOwnProperty('sdMasonryHeight')) {
         throw new TypeError(`item${idString}missing property sdMasonryHeight`);
@@ -185,7 +276,7 @@ export class SdMasonryComponent implements OnInit, OnChanges {
       this.lastUsableRowForPage = 1;
       this.cells = {};
 
-      this.buildMasonryStyles(true);
+      this.buildSdMasonryStyles(true);
       this.buildComponentItems();
     }
 
@@ -212,16 +303,16 @@ export class SdMasonryComponent implements OnInit, OnChanges {
   }
 
   /**
-   * Add a `sdMasonryStyle` property to each item in the this.masonryData array
+   * Add a `sdMasonryStyle` property to each item in the this.sdMasonryData array
    */
-  buildMasonryStyles(reCalcAllStyles?: boolean): void {
-    if (! this.masonryData || ! this.colDimension) {
+  buildSdMasonryStyles(reCalcAllStyles?: boolean): void {
+    if (! this.sdMasonryData || ! this.colDimension) {
       return;
     }
 
     this.getSetMedianArea(reCalcAllStyles);
 
-    this.masonryData.forEach((result) => {
+    this.sdMasonryData.forEach((result) => {
       if (reCalcAllStyles || ! result.hasOwnProperty('sdMasonryStyle')) {
         result.sdMasonryStyle = this.getImageColRowSpan(result.sdMasonryWidth, result.sdMasonryHeight);
       }
@@ -234,7 +325,7 @@ export class SdMasonryComponent implements OnInit, OnChanges {
    */
   getSetMedianArea(reCalcAllStyles?: boolean): void {
     this.areas = [];
-    this.masonryData.forEach((result) => {
+    this.sdMasonryData.forEach((result) => {
       if (reCalcAllStyles || ! result.hasOwnProperty('sdMasonryStyle')) {
         const area = result.sdMasonryWidth * result.sdMasonryHeight;
         if (area) {
