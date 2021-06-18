@@ -207,7 +207,7 @@ export class ItemComponent implements OnInit{
 }
 ```
 Remember to update `app.module.ts` to import the `BrowserAnimationsModule`
-```json
+```js
 imports: [
     BrowserModule,
     SdMasonryModule,
