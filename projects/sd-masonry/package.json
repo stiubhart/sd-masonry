@@ -1,6 +1,6 @@
 {
   "name": "sd-masonry",
-  "version": "0.1.10",
+  "version": "0.1.11",
   "description": "Angular Component for organising child components in a masonry layout",
   "repository": {
     "type": "git",
