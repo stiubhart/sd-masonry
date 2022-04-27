@@ -1,13 +1,16 @@
 
-# SdMasonry  
-  
+# SdMasonry
+
 This library was generated with [Angular CLI](https://github.com/angular/angular-cli) version 10.0.14.  
-  
+
+### Check out an example [here](https://stiubhart.github.io/sd-masonry/)
+
 #### Angular Component for organising child components in a masonry layout
 
 The masonry grid is hastily calculated using `sdMasonryWidth` and `sdMasonryHeight` on each item on an array that you provide. Much faster than working this out on the fly after render that you see on other masonry layout packages. From there, you may add as much or as little data you want to each item which will be passed to one of your own component to do with what you will.
  
 Did I mention sd-masonry also flawlessly handles pagination. Simply add more items to your `data` object
+
 
 ## Install  
   
@@ -41,6 +44,12 @@ Your component will be passed each item in your `data` array above in the form o
 ## Getting Started - A Walk-through
 
 Start a new project `ng new my-sd-masonry`
+
+Install `sd-masonry`
+```
+cd my-sd-masonry
+npm i sd-masonry
+```
 
 replace `app.component.ts` with the following
 ```typescript

@@ -183,11 +183,7 @@ export class SdMasonryComponent implements OnInit, OnChanges {
    * host view.
    */
   buildComponentItems(): void {
-    if (! this.masonryContent) {
-      return;
-    }
-
-    this.sdMasonryData.forEach((item: {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId: number}) => {
+    this.sdMasonryData?.forEach((item: {sdMasonryWidth: number, sdMasonryHeight: number, sdMasonryStyle?: string, sdMasonryId: number}) => {
       const forwardItem = JSON.parse(JSON.stringify(item));
       delete forwardItem.sdMasonryId;
       delete forwardItem.sdMasonryStyle;
@@ -381,6 +377,11 @@ export class SdMasonryComponent implements OnInit, OnChanges {
     if (area > this.medianArea && colSpan !== 3 && rowSpan !== 3) {
       colSpan++;
       rowSpan++;
+    }
+
+    if (colSpan === 3 && rowSpan === 3) {
+      colSpan = 2;
+      rowSpan = 2;
     }
 
     const colSpanStyle = `/ span ${colSpan} `;
